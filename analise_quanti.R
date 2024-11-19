@@ -24,8 +24,8 @@ library(tidytext)  # analise de texto
 
 # importar bases
 df_base = read.csv("data/database_litrev.csv")
-df_class_llm = read.csv("data/df_class_final_artigos.csv")
 df_rev_abstracts = read.csv("data/revised_abstracts.csv")
+df_class_llm = read.csv("data/df_class_final_artigos.csv")
 
 # ================== preenchimento das variaveis ==================
 ## Substituindo valores vazios por nulo
@@ -571,7 +571,7 @@ ggsave("images/qtd_by_year.png", width = 6, height = 4, dpi = 300)
 
 # Qtd de citacoes por ano e outros agrupamentos
 df_citation = df %>%
-  select(id, Publication.Year, tema, theoretical.framework, cited.reference.count) %>%
+  select(id, Publication.Year, tema, theoretical.framework, Times.Cited..WoS.Core, Times.Cited..All.Databases) %>%
   mutate(
     year = as.integer(str_pad(gsub('\\.', '', Publication.Year), width = 4, side = "right", pad = "0")),
     tema_label = case_when(tema == 1 ~ "Poluição Atmosférica",
@@ -582,13 +582,38 @@ df_citation = df %>%
                                 tema == 6 ~ "Governança Marinha/Oceanos",
                                 tema == 7 ~ "Mineração",
                                 tema == 8 ~ "Governança de Água Doce",
-                                tema == 9 ~ "Múlti-temático")
+                                tema == 9 ~ "Múlti-temático"),
+    qtd_citacoes = if_else(is.na(Times.Cited..All.Databases), Times.Cited..WoS.Core, Times.Cited..All.Databases)
     ) %>%
-  select(!c(Publication.Year, tema))
+  select(!c(Publication.Year, tema, Times.Cited..WoS.Core, Times.Cited..All.Databases))
   
-summary(df_citation$cited.reference.count)
+summary(df_citation$qtd_citacoes)
 
-#plot - opcao 1
+#plot - opcao 1 [backup versao com a variavel errada "cited reference count"]
+df_citation %>%
+  ggplot(aes(x=year, y=qtd_citacoes, col=factor(tema_label), label = theoretical.framework)) + 
+  geom_point(aes(shape=factor(theoretical.framework)), size = 2) + 
+  #geom_text(aes(label=as.character(theoretical.framework)), hjust=0.5, vjust=1.7, size = 2.5, show.legend = FALSE) + # default label
+  geom_text(aes(label=ifelse((year > 2018) & (year < 2023) & (qtd_citacoes < 13),'', theoretical.framework)),
+            hjust=-0.3, vjust=0.3, size = 2.3, show.legend = FALSE) +
+  #geom_text(aes(label=as.character(theoretical.framework)), hjust=-0.3, vjust=0.3, size = 2.5, show.legend = FALSE) +
+  scale_x_continuous(breaks = seq(2003, 2023, by = 2)) +
+  scale_y_continuous(breaks = seq(0, 90, by = 10)) +
+  scale_color_brewer(palette="Dark2") +
+  labs(colour = "Tema", shape = "Abordagem",
+       title = "Citações por ano e caracteristicas do artigo",
+       x = "Ano", y = "Quantidade de citações") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0, size = 13),
+        axis.text.x = element_text(size = 9),
+        axis.text.y = element_text(size = 9),
+        legend.title = element_text(size = 9, margin = margin(b = 1, unit = "pt")), 
+        legend.text = element_text(size = 7, margin = margin(l = 1, unit = "pt")),
+        legend.margin = margin(0, 0, 0, 0),
+        legend.key.height = unit(0.4, "cm"))
+ggsave("images/qtd_citation_by_year.png", width = 8, height = 4, dpi = 300)
+
+#plot - opcao 1 [backup versao com a variavel errada "cited reference count"]
 df_citation %>%
   ggplot(aes(x=year, y=cited.reference.count, col=factor(tema_label), label = theoretical.framework)) + 
   geom_point(aes(shape=factor(theoretical.framework)), size = 2) + 
@@ -609,7 +634,7 @@ df_citation %>%
         legend.text = element_text(size = 7, margin = margin(l = 1, unit = "pt")),
         legend.margin = margin(0, 0, 0, 0),
         legend.key.height = unit(0.4, "cm"))
-ggsave("images/qtd_citation_by_year.png", width = 8, height = 4, dpi = 300)
+#ggsave("images/qtd_citation_by_year.png", width = 8, height = 4, dpi = 300)
 
   
 #plot - opcao 2
