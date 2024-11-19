@@ -1,4 +1,4 @@
-# capitulo capano (set/2024)
+# capitulo RSL_PolProcess_MeioAmbiente (set/2024)
 # analise quantitiva do banco de dados de revisão de literatura
 # autoras: Andrea Steiner, Elia Cia, Georgia Ribeiro e Nathaly Lohane
 
