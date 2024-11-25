@@ -25,7 +25,7 @@ library(tidytext)  # analise de texto
 # importar bases
 df_base = read.csv("data/database_litrev.csv")
 df_rev_abstracts = read.csv("data/revised_abstracts.csv")
-df_class_llm = read.csv("data/df_class_final_artigos.csv")
+df_class_llm = read.csv("data/created/df_class_final_artigos.csv")
 
 # ================== preenchimento das variaveis ==================
 ## Substituindo valores vazios por nulo
@@ -588,6 +588,16 @@ df_citation = df %>%
   select(!c(Publication.Year, tema, Times.Cited..WoS.Core, Times.Cited..All.Databases))
   
 summary(df_citation$qtd_citacoes)
+tapply(df_citation$qtd_citacoes, df_citation$theoretical.framework, summary)
+tapply(df_citation$qtd_citacoes, df_citation$tema_label, summary)
+
+
+# saving metrics
+df_metric_by_framework = aggregate(qtd_citacoes ~theoretical.framework, df_citation, summary)
+write.csv(df_metric_by_framework, "data/created/metric_by_framework.csv", fileEncoding="UTF-16LE") # encoding para manter acentos
+
+df_metric_by_theme = aggregate(qtd_citacoes ~ tema_label, df_citation, summary)
+write.csv(df_metric_by_theme, "data/created/metric_by_theme.csv", fileEncoding="UTF-16LE") # encoding para manter acentos
 
 #plot - opcao 1 [backup versao com a variavel errada "cited reference count"]
 df_citation %>%
